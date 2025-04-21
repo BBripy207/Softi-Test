@@ -8,12 +8,12 @@ export const crearTransaccion = async (req: Request, res: Response) => {
         const { montoTotal, numEmpleados, montoPorEmpleado, pagos } = req.body;
 
         // Crear la transacción
-        const transaccion = TransaccionModel.create(montoTotal, numEmpleados, montoPorEmpleado);
+        const transaccion = await TransaccionModel.create(montoTotal, numEmpleados, montoPorEmpleado);
 
         // Crear los pagos asociados a la transacción
         if (pagos && pagos.length > 0) {
             const pagoPromises = pagos.map((pago: any) => {
-                return PagoModel.create(pago.monto, pago.metodo, transaccion.id);
+                return PagoModel.create(pago.monto, pago.metodoPago, transaccion.id);
             });
 
             await Promise.all(pagoPromises);
@@ -40,7 +40,7 @@ export const crearTransaccion = async (req: Request, res: Response) => {
 
 export const obtenerTransacciones = async (req: Request, res: Response) => {
     try {
-        const transacciones = TransaccionModel.findAll();
+        const transacciones = await TransaccionModel.findAll();
 
         res.status(200).json({
             success: true,
@@ -59,7 +59,7 @@ export const obtenerTransaccionPorId = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
 
-        const transaccion = TransaccionModel.findById(parseInt(id));
+        const transaccion = await TransaccionModel.findById(parseInt(id));
 
         if (!transaccion) {
             return res.status(404).json({
@@ -68,7 +68,7 @@ export const obtenerTransaccionPorId = async (req: Request, res: Response) => {
             });
         }
 
-        const pagos = PagoModel.findAllByTransaccionId(transaccion.id);
+        const pagos = await PagoModel.findAllByTransaccionId(transaccion.id);
 
         res.status(200).json({
             success: true,
@@ -90,7 +90,7 @@ export const generarRecibo = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
 
-        const transaccion = TransaccionModel.findById(parseInt(id));
+        const transaccion = await TransaccionModel.findById(parseInt(id));
 
         if (!transaccion) {
             return res.status(404).json({
@@ -99,16 +99,13 @@ export const generarRecibo = async (req: Request, res: Response) => {
             });
         }
 
-        // En un entorno real, aquí generaríamos un PDF o un formato adecuado para recibo
-        // Por ahora, simplemente retornamos los datos de la transacción formateados
-
         const recibo = {
             id: transaccion.id,
             fecha: transaccion.fecha,
             montoTotal: transaccion.montoTotal,
             numEmpleados: transaccion.numEmpleados,
             montoPorEmpleado: transaccion.montoPorEmpleado,
-            pagos: PagoModel.findAllByTransaccionId(transaccion.id)
+            pagos: await PagoModel.findAllByTransaccionId(transaccion.id)
         };
 
         res.status(200).json({

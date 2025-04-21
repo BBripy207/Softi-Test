@@ -9,11 +9,12 @@
 import { defineComponent } from 'vue';
 import PagarPropinas from './views/PagarPropinas.vue';
 
+
 export default defineComponent({
   name: 'App',
   components: {
-    PagarPropinas
-  }
+    PagarPropinas,
+  },
 });
 </script>
 

@@ -12,7 +12,7 @@ interface Transaccion {
 class TransaccionModel {
     public static transacciones: Transaccion[] = [];
 
-    public static create(montoTotal: number, numEmpleados: number, montoPorEmpleado: number): Transaccion {
+    public static async create(montoTotal: number, numEmpleados: number, montoPorEmpleado: number): Promise<Transaccion> {
         const transaccion: Transaccion = {
             id: this.transacciones.length + 1, // ID único
             montoTotal,
@@ -25,11 +25,11 @@ class TransaccionModel {
         return transaccion;
     }
 
-    public static findAll(): Transaccion[] {
+    public static async findAll(): Promise<Transaccion[]> {
         return this.transacciones;
     }
 
-    public static findById(id: number): Transaccion | undefined {
+    public static async findById(id: number): Promise<Transaccion | undefined> {
         return this.transacciones.find((transaccion) => transaccion.id === id);
     }
 }
