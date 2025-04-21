@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import { transaccionesRouter } from './routes/transacciones';
+import { transaccionesRouter } from './routes/transactions';
 import { configureDb } from './config/database';
 
 // Initialize the application

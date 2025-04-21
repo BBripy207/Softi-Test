@@ -4,7 +4,7 @@ import {
     obtenerTransacciones,
     obtenerTransaccionPorId,
     generarRecibo
-} from '../controllers/transaccionesController';
+} from '../controllers/transactionsController';
 
 const router = Router();
 

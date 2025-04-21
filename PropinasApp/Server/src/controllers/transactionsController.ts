@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import Transaccion from '../models/Transaccion';
-import Pago from '../models/Pago';
+import Transaccion from '../models/Transaction';
+import Pago from '../models/Payment';
 
 export const crearTransaccion = async (req: Request, res: Response): Promise<Response> => {
     try {
