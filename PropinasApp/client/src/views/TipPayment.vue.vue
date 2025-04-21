@@ -311,10 +311,15 @@ export default defineComponent({
     
     const newPayment = () => {
       store.commit('resetPayments');
+      store.commit('setTotalTips', 0); // Reset total tips to zero
       amountEntered.value = false;
       employeesSelected.value = false;
-      inputAmount.value = '';
-      inputEmployees.value = '';
+      inputAmount.value = ''; // Allow re-entering the amount
+      inputEmployees.value = ''; // Allow re-entering the number of employees
+      selectedMethod.value = ''; // Reset selected payment method
+      paymentAmount.value = ''; // Allow re-entering payment amount
+      enteringPaymentAmount.value = false;
+      showReceipt.value = false;
     };
     
     const editAmount = () => {
