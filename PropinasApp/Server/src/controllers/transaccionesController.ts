@@ -4,65 +4,65 @@ import Pago from '../models/Pago';
 
 export const crearTransaccion = async (req: Request, res: Response): Promise<Response> => {
     try {
-        const { montoTotal, numEmpleados, montoPorEmpleado, pagos } = req.body;
+        const { totalAmount, employeeCount, amountPerEmployee, payments } = req.body;
 
-        // Crear la transacción
-        const transaccion = await Transaccion.create({
-            montoTotal,
-            numEmpleados,
-            montoPorEmpleado,
+        // Create the transaction
+        const transaction = await Transaccion.create({
+            montoTotal: totalAmount,
+            numEmpleados: employeeCount,
+            montoPorEmpleado: amountPerEmployee,
             fecha: new Date(),
         });
 
-        // Crear los pagos asociados a la transacción
-        if (Array.isArray(pagos)) {
-            const pagoPromises = pagos.map((pago: { monto: number; metodo: string }) => {
+        // Create the payments associated with the transaction
+        if (Array.isArray(payments)) {
+            const paymentPromises = payments.map((payment: { amount: number; method: string }) => {
                 return Pago.create({
-                    monto: pago.monto,
-                    metodoPago: pago.metodo,
-                    transaccionId: transaccion.id,
+                    monto: payment.amount,
+                    metodoPago: payment.method,
+                    transaccionId: transaction.id,
                     fecha: new Date(),
                 });
             });
 
-            await Promise.all(pagoPromises);
+            await Promise.all(paymentPromises);
         }
 
         return res.status(201).json({
             success: true,
             data: {
-                id: transaccion.id,
-                montoTotal,
-                numEmpleados,
-                montoPorEmpleado,
-                fecha: transaccion.fecha,
+                id: transaction.id,
+                totalAmount,
+                employeeCount,
+                amountPerEmployee,
+                date: transaction.fecha,
             },
         });
     } catch (error: unknown) {
-        console.error('Error al crear transacción:', error);
+        console.error('Error creating transaction:', error);
         return res.status(500).json({
             success: false,
-            error: 'Error al procesar la transacción',
+            error: 'Error processing the transaction',
         });
     }
 };
 
 export const obtenerTransacciones = async (req: Request, res: Response) => {
     try {
-        const transacciones = await Transaccion.findAll({
+        const transactions = await Transaccion.findAll({
             include: [{ model: Pago }],
             order: [['fecha', 'DESC']],
         });
 
         res.status(200).json({
             success: true,
-            data: transacciones,
+            data: transactions,
         });
     } catch (error: unknown) {
-        console.error('Error al obtener transacciones:', error);
+        console.error('Error fetching transactions:', error);
         res.status(500).json({
             success: false,
-            error: 'Error al obtener las transacciones',
+            error: 'Error fetching transactions',
         });
     }
 };
@@ -71,26 +71,26 @@ export const obtenerTransaccionPorId = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
 
-        const transaccion = await Transaccion.findByPk(id, {
+        const transaction = await Transaccion.findByPk(id, {
             include: [{ model: Pago }],
         });
 
-        if (!transaccion) {
+        if (!transaction) {
             return res.status(404).json({
                 success: false,
-                error: 'Transacción no encontrada',
+                error: 'Transaction not found',
             });
         }
 
         res.status(200).json({
             success: true,
-            data: transaccion,
+            data: transaction,
         });
     } catch (error: unknown) {
-        console.error('Error al obtener transacción:', error);
+        console.error('Error fetching transaction:', error);
         res.status(500).json({
             success: false,
-            error: 'Error al obtener la transacción',
+            error: 'Error fetching the transaction',
         });
     }
 };
@@ -99,38 +99,38 @@ export const generarRecibo = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
 
-        const transaccion = await Transaccion.findByPk(id, {
+        const transaction = await Transaccion.findByPk(id, {
             include: [{ model: Pago }],
         });
 
-        if (!transaccion) {
+        if (!transaction) {
             return res.status(404).json({
                 success: false,
-                error: 'Transacción no encontrada',
+                error: 'Transaction not found',
             });
         }
 
-        // En un entorno real, aquí generaríamos un PDF o un formato adecuado para recibo
-        // Por ahora, simplemente retornamos los datos de la transacción formateados
+        // In a real environment, generate a PDF or appropriate receipt format here
+        // For now, return the formatted transaction data
 
-        const recibo = {
-            id: transaccion.id,
-            fecha: transaccion.fecha,
-            montoTotal: transaccion.montoTotal,
-            numEmpleados: transaccion.numEmpleados,
-            montoPorEmpleado: transaccion.montoPorEmpleado,
-            pagos: transaccion.get('Pagos') || [],
+        const receipt = {
+            id: transaction.id,
+            date: transaction.fecha,
+            totalAmount: transaction.montoTotal,
+            employeeCount: transaction.numEmpleados,
+            amountPerEmployee: transaction.montoPorEmpleado,
+            payments: transaction.get('Pagos') || [],
         };
 
         res.status(200).json({
             success: true,
-            data: recibo,
+            data: receipt,
         });
     } catch (error: unknown) {
-        console.error('Error al generar recibo:', error);
+        console.error('Error generating receipt:', error);
         res.status(500).json({
             success: false,
-            error: 'Error al generar el recibo',
+            error: 'Error generating the receipt',
         });
     }
 };

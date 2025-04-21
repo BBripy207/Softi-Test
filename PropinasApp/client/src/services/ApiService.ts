@@ -3,16 +3,16 @@ import axios, { AxiosResponse } from 'axios';
 const API_URL = 'http://localhost:3000/api';
 
 export default {
-    guardarTransaccion(data: Record<string, unknown>): Promise<AxiosResponse<any>> {
-        return axios.post(`${API_URL}/transacciones`, data);
+    saveTransaction(data: Record<string, unknown>): Promise<AxiosResponse<any>> {
+        return axios.post(`${API_URL}/transactions`, data);
     },
 
-    obtenerTransacciones(): Promise<AxiosResponse<any>> {
-        return axios.get(`${API_URL}/transacciones`);
+    fetchTransactions(): Promise<AxiosResponse<any>> {
+        return axios.get(`${API_URL}/transactions`);
     },
 
-    generarRecibo(id: number): Promise<AxiosResponse<any>> {
-        return axios.get(`${API_URL}/transacciones/${id}/recibo`);
+    generateReceipt(id: number): Promise<AxiosResponse<any>> {
+        return axios.get(`${API_URL}/transactions/${id}/receipt`);
     },
 };
 

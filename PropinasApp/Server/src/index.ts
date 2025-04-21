@@ -4,29 +4,29 @@ import bodyParser from 'body-parser';
 import { transaccionesRouter } from './routes/transacciones';
 import { configureDb } from './config/database';
 
-// Inicializar la aplicación
+// Initialize the application
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configurar middlewares
+// Configure middlewares
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Configurar base de datos
+// Configure database
 configureDb().catch((error: unknown) => {
-    console.error('Error al configurar la base de datos:', error);
+    console.error('Error configuring the database:', error);
 });
 
-// Configurar rutas
+// Configure routes
 app.use('/api/transacciones', transaccionesRouter);
 
-// Ruta de prueba
+// Test route
 app.get('/', (req: Request, res: Response) => {
-    res.send('API de gestión de propinas funcionando correctamente.');
+    res.send('Tips management API running successfully.');
 });
 
-// Iniciar el servidor
+// Start the server
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en el puerto ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });

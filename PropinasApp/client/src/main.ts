@@ -3,65 +3,65 @@ import App from './App.vue';
 import { createStore } from 'vuex';
 import './assets/styles.css';
 
-// Definición de tipos para el estado
+// State type definitions
 interface State {
-    totalPropinas: number;
-    numEmpleados: number;
-    proPorPersona: number;
-    pagosRealizados: { monto: number; metodo: string; fecha: string }[];
-    totalPagado: number;
-    restantePorPagar: number;
-    efectivoEnCaja: number;
+    totalTips: number;
+    employeeCount: number;
+    tipsPerEmployee: number;
+    completedPayments: { amount: number; method: string; date: string }[];
+    totalPaid: number;
+    remainingToPay: number;
+    cashInBox: number;
 }
 
-// Configuración del store con Vuex
+// Vuex store configuration
 const store = createStore<State>({
     state(): State {
         return {
-            totalPropinas: 0,
-            numEmpleados: 0,
-            proPorPersona: 0,
-            pagosRealizados: [],
-            totalPagado: 0,
-            restantePorPagar: 0,
-            efectivoEnCaja: 5500.0,
+            totalTips: 0,
+            employeeCount: 0,
+            tipsPerEmployee: 0,
+            completedPayments: [],
+            totalPaid: 0,
+            remainingToPay: 0,
+            cashInBox: 5500.0,
         };
     },
     mutations: {
-        setTotalPropinas(state, total: number) {
-            state.totalPropinas = total;
-            state.restantePorPagar = total;
+        setTotalTips(state, total: number) {
+            state.totalTips = total;
+            state.remainingToPay = total;
         },
-        setNumEmpleados(state, num: number) {
-            state.numEmpleados = num;
-            state.proPorPersona = num > 0 ? state.totalPropinas / num : 0;
+        setEmployeeCount(state, count: number) {
+            state.employeeCount = count;
+            state.tipsPerEmployee = count > 0 ? state.totalTips / count : 0;
         },
-        agregarPago(state, payload: { monto: number; metodo: string; fecha: string }) {
-            state.pagosRealizados.push(payload);
-            state.totalPagado += payload.monto;
-            state.restantePorPagar -= payload.monto;
-            if (payload.metodo === 'Efectivo') {
-                state.efectivoEnCaja -= payload.monto;
+        addPayment(state, payload: { amount: number; method: string; date: string }) {
+            state.completedPayments.push(payload);
+            state.totalPaid += payload.amount;
+            state.remainingToPay -= payload.amount;
+            if (payload.method === 'Cash') {
+                state.cashInBox -= payload.amount;
             }
         },
-        resetearPagos(state) {
-            state.pagosRealizados = [];
-            state.totalPagado = 0;
-            state.restantePorPagar = state.totalPropinas;
+        resetPayments(state) {
+            state.completedPayments = [];
+            state.totalPaid = 0;
+            state.remainingToPay = state.totalTips;
         },
     },
     actions: {
-        procesarPago({ commit }, payload: { monto: number; metodo: string }) {
+        processPayment({ commit }, payload: { amount: number; method: string }) {
             return new Promise((resolve) => {
-                const fecha = new Date().toISOString();
-                commit('agregarPago', { ...payload, fecha });
+                const date = new Date().toISOString();
+                commit('addPayment', { ...payload, date });
                 resolve({ success: true });
             });
         },
     },
     getters: {
-        porcentajePagado(state): number {
-            return state.totalPropinas > 0 ? (state.totalPagado / state.totalPropinas) * 100 : 0;
+        paymentPercentage(state): number {
+            return state.totalTips > 0 ? (state.totalPaid / state.totalTips) * 100 : 0;
         },
     },
 });

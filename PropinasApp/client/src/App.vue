@@ -1,17 +1,17 @@
 <template>
   <div class="app-container">
-    <PagarPropinas />
+    <TipPayment />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import PagarPropinas from './views/PagarPropinas.vue';
+import TipPayment from './views/TipPayment.vue';
 
 export default defineComponent({
   name: 'App',
   components: {
-    PagarPropinas
+    TipPayment
   }
 });
 </script>
