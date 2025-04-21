@@ -1,152 +1,177 @@
 <template>
   <div class="pagos-container">
-    <h1>Pagos</h1>
+    <div class="header">
+      <button class="btn-atras" @click="atras">
+        <span class="arrow-left">&#10094;</span> Atrás
+      </button>
+      <h1>Pago de Propinas</h1>
+      <div class="efectivo-box">
+        <span class="efectivo-label">Efectivo en Caja</span>
+        <span class="efectivo-amount">${{ formatNumber(efectivoEnCaja) }}</span>
+      </div>
+    </div>
     
-    <div class="propinas-panel">
-      <div class="propinas-input">
-        <h2>¿Entre cuántos quieres dividir las Propinas?</h2>
-        <div v-if="!montoIngresado" class="input-section">
-          <div class="monto-input">
-            <span class="currency-symbol">$</span>
-            <input v-model="inputMonto" type="text" placeholder="0.00" @keyup.enter="confirmarMonto" />
+    <div class="divider"></div>
+    
+    <div class="main-content">
+      <div class="propinas-input-section">
+        <div class="total-propinas">
+          <span class="label">Total de Propinas</span>
+          <div class="amount-edit">
+            <span class="amount">${{ formatNumber(totalPropinas) }}</span>
+            <button class="edit-button" @click="editarMonto" v-if="montoIngresado">
+              <span class="edit-icon">✎</span>
+            </button>
           </div>
-          <div class="numpad">
-            <button v-for="num in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '00']" 
-                   :key="num" 
-                   @click="agregarNumero(num)">{{ num }}</button>
-            <button @click="borrarNumero">⌫</button>
-          </div>
-          <button class="btn-confirmar" @click="confirmarMonto">Confirmar Monto</button>
         </div>
         
-        <div v-else-if="!empleadosSeleccionados" class="input-section">
-          <div class="monto-input">
-            <span class="currency-symbol">#</span>
-            <input v-model="inputEmpleados" type="text" placeholder="0" @keyup.enter="confirmarEmpleados" />
+        <div class="empleados-section">
+          <h2>¿Entre cuántos quieres dividir las Propinas?</h2>
+          <div class="empleados-input">
+            <div class="input-with-symbol">
+              <span class="hash-symbol">#</span>
+              <input 
+                type="text" 
+                v-model="inputEmpleados" 
+                placeholder="0" 
+                @keyup.enter="confirmarEmpleados"
+              />
+            </div>
+            <span class="per-person">${{ formatNumber(proPorPersona) }} x Persona</span>
           </div>
-          <div class="numpad">
-            <button v-for="num in ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']" 
-                   :key="num" 
-                   @click="agregarNumeroEmpleados(num)">{{ num }}</button>
-            <button @click="borrarNumeroEmpleados">⌫</button>
+        </div>
+        
+        <div class="metodo-pago-section" v-if="empleadosSeleccionados">
+          <h2 class="with-icon">
+            <span class="wallet-icon">💳</span> Elige el Método de Pago
+          </h2>
+          <div class="payment-methods">
+            <button 
+              class="payment-method-btn" 
+              :class="{ active: metodoSeleccionado === 'Efectivo' }"
+              @click="seleccionarMetodoPago('Efectivo')"
+            >
+              <span class="method-icon">💵</span>
+              <span>Efectivo</span>
+            </button>
+            <button 
+              class="payment-method-btn" 
+              :class="{ active: metodoSeleccionado === 'BBVA 1234' }"
+              @click="seleccionarMetodoPago('BBVA 1234')"
+            >
+              <span class="method-icon">🏦</span>
+              <span>BBVA 1234</span>
+            </button>
           </div>
-          <button class="btn-confirmar" @click="confirmarEmpleados">Confirmar Empleados</button>
         </div>
       </div>
       
-      <div class="payment-summary">
-        <h2>Pagar Propinas</h2>
-        <div class="summary-row">
-          <span>Total Pagado</span>
-          <span>${{ totalPagado.toFixed(2) }}</span>
-        </div>
-        <div class="summary-row">
-          <span>Restante por Pagar</span>
-          <span>${{ restantePorPagar.toFixed(2) }}</span>
-        </div>
-        <div class="summary-row">
-          <span>{{ proPorPersona.toFixed(2) }} x Persona</span>
-        </div>
-        
-        <div class="payment-history">
-          <h3>Pago de Propinas</h3>
-          <div v-if="pagosRealizados.length === 0" class="no-payments">
-            Sin Pagos
+      <div class="numpad-area">
+        <div class="numpad-display">
+          <div v-if="!montoIngresado" class="monto-input">
+            <span class="currency-symbol">$</span>
+            <input v-model="inputMonto" type="text" placeholder="0.00" @keyup.enter="confirmarMonto" />
           </div>
-          <div v-else class="payment-list">
-            <div v-for="(pago, index) in pagosRealizados" :key="index" class="payment-item">
-              {{ pago.metodo }} ${{ pago.monto.toFixed(2) }}
-            </div>
+          <div v-else-if="!empleadosSeleccionados" class="monto-input">
+            <span class="currency-symbol">#</span>
+            <input v-model="inputEmpleados" type="text" placeholder="0" @keyup.enter="confirmarEmpleados" />
+          </div>
+          <div v-else-if="metodoSeleccionado" class="monto-input">
+            <span class="currency-symbol">$</span>
+            <input v-model="montoPago" type="text" placeholder="0.00" @keyup.enter="confirmarMontoPago" />
           </div>
         </div>
         
-        <div class="payment-methods">
-          <h3>Elige el Método de Pago</h3>
-          <div class="cash-available">
-            <span>Efectivo en Caja</span>
-            <span>${{ efectivoEnCaja.toFixed(2) }}</span>
+        <div class="numpad-grid">
+          <button @click="agregarNumero('1')" class="numpad-btn">1</button>
+          <button @click="agregarNumero('2')" class="numpad-btn">2</button>
+          <button @click="agregarNumero('3')" class="numpad-btn">3</button>
+          <button @click="agregarNumero('4')" class="numpad-btn">4</button>
+          <button @click="agregarNumero('5')" class="numpad-btn">5</button>
+          <button @click="agregarNumero('6')" class="numpad-btn">6</button>
+          <button @click="agregarNumero('7')" class="numpad-btn">7</button>
+          <button @click="agregarNumero('8')" class="numpad-btn">8</button>
+          <button @click="agregarNumero('9')" class="numpad-btn">9</button>
+          <button @click="agregarNumero('00')" class="numpad-btn">00</button>
+          <button @click="agregarNumero('0')" class="numpad-btn">0</button>
+          <button @click="borrarNumero()" class="numpad-btn backspace">⌫</button>
+        </div>
+        
+        <button class="confirm-button" @click="confirmarAccion()">
+          <span class="check-icon">✓</span>
+        </button>
+      </div>
+      
+      <div class="pagos-summary">
+        <h2>Pagos</h2>
+        <div v-if="pagosRealizados.length === 0" class="sin-pagos">
+          Sin Pagos
+        </div>
+        <div v-else class="pago-list">
+          <div v-for="(pago, index) in pagosRealizados" :key="index" class="pago-item">
+            <span class="pago-metodo">{{ pago.metodo }}</span>
+            <span class="pago-monto">${{ formatNumber(pago.monto) }}</span>
           </div>
-          <div class="total-tips">
-            <span>Total de Propinas</span>
-            <span>${{ totalPropinas.toFixed(2) }}</span>
+        </div>
+        
+        <div class="summary-totals" v-if="totalPagado > 0">
+          <div class="summary-row">
+            <span>Total Pagado</span>
+            <span class="amount">${{ formatNumber(totalPagado) }}</span>
           </div>
-          <div class="employees-count">
-            <span>{{ numEmpleados }}</span>
-          </div>
-          
-          <div class="method-buttons">
-            <button 
-              v-for="metodo in metodosPago" 
-              :key="metodo" 
-              @click="seleccionarMetodoPago(metodo)"
-              :class="{ active: metodoSeleccionado === metodo }"
-            >
-              {{ metodo }}
-            </button>
-          </div>
-          
-          <div v-if="metodoSeleccionado && !montoIngresandoPago" class="amount-input">
-            <div class="monto-input">
-              <span class="currency-symbol">$</span>
-              <input v-model="montoPago" type="text" placeholder="0.00" @keyup.enter="confirmarMontoPago" />
-            </div>
-            <div class="payment-options">
-              <button 
-                v-if="proPorPersona > 0" 
-                @click="montoPago = proPorPersona.toFixed(2)"
-              >
-                Pagar monto por persona ({{ proPorPersona.toFixed(2) }})
-              </button>
-              <button 
-                v-if="restantePorPagar > 0" 
-                @click="montoPago = restantePorPagar.toFixed(2)"
-              >
-                Pagar monto restante ({{ restantePorPagar.toFixed(2) }})
-              </button>
-            </div>
-            <button class="btn-confirmar" @click="confirmarMontoPago">Confirmar Monto</button>
-          </div>
-          
-          <div v-if="montoIngresandoPago" class="confirm-payment">
-            <h3>Pagar {{ montoPago }} en Propinas</h3>
-            <button class="btn-confirmar" @click="procesarPago">Confirmar Pago</button>
-            <button class="btn-cancelar" @click="cancelarPago">Cancelar</button>
+          <div class="summary-row">
+            <span>Restante por Pagar</span>
+            <span class="amount">${{ formatNumber(restantePorPagar) }}</span>
           </div>
         </div>
       </div>
     </div>
     
-    <div v-if="pagoCompleto" class="payment-complete">
-      <h2>¡Pago de propinas completado!</h2>
-      <button @click="generarRecibo" class="btn-recibo">Generar Recibo</button>
-      <button @click="nuevoPago" class="btn-nuevo">Nuevo Pago</button>
+    <div v-if="montoIngresandoPago" class="confirm-payment-overlay">
+      <div class="confirm-payment-modal">
+        <h3>Pagar ${{ formatNumber(montoPago) }} en Propinas</h3>
+        <div class="modal-buttons">
+          <button class="btn-cancelar" @click="cancelarPago">Cancelar</button>
+          <button class="btn-confirmar" @click="procesarPago">Confirmar Pago</button>
+        </div>
+      </div>
     </div>
     
-    <div v-if="mostrarRecibo" class="recibo-modal">
+    <div v-if="pagoCompleto" class="payment-complete-overlay">
+      <div class="payment-complete-modal">
+        <h2>¡Pago de propinas completado!</h2>
+        <div class="modal-buttons">
+          <button @click="generarRecibo" class="btn-recibo">Generar Recibo</button>
+          <button @click="nuevoPago" class="btn-nuevo">Nuevo Pago</button>
+        </div>
+      </div>
+    </div>
+    
+    <div v-if="mostrarRecibo" class="recibo-modal-overlay">
       <div class="recibo-content">
         <h2>Recibo de Pago de Propinas</h2>
         <p>Fecha: {{ new Date().toLocaleDateString() }}</p>
-        <p>Total de Propinas: ${{ totalPropinas.toFixed(2) }}</p>
+        <p>Total de Propinas: ${{ formatNumber(totalPropinas) }}</p>
         <p>Número de Empleados: {{ numEmpleados }}</p>
-        <p>Monto por Empleado: ${{ proPorPersona.toFixed(2) }}</p>
+        <p>Monto por Empleado: ${{ formatNumber(proPorPersona) }}</p>
         
         <h3>Detalle de Pagos:</h3>
         <ul>
           <li v-for="(pago, index) in pagosRealizados" :key="index">
-            {{ pago.metodo }}: ${{ pago.monto.toFixed(2) }}
+            {{ pago.metodo }}: ${{ formatNumber(pago.monto) }}
           </li>
         </ul>
         
-        <button @click="imprimirRecibo" class="btn-imprimir">Imprimir</button>
-        <button @click="cerrarRecibo" class="btn-cerrar">Cerrar</button>
+        <div class="modal-buttons">
+          <button @click="cerrarRecibo" class="btn-cerrar">Cerrar</button>
+          <button @click="imprimirRecibo" class="btn-imprimir">Imprimir</button>
+        </div>
       </div>
     </div>
-    
-    <button class="btn-atras" @click="atras">Atrás</button>
   </div>
 </template>
 
-<script lang="ts">
+<script>
 import { defineComponent } from 'vue';
 import { useStore } from 'vuex';
 import { computed, ref } from 'vue';
@@ -180,13 +205,41 @@ export default defineComponent({
     const pagoCompleto = computed(() => totalPropinas.value > 0 && restantePorPagar.value === 0);
     
     // Métodos
-    const agregarNumero = (num: string) => {
-      if (num === '00' && inputMonto.value === '') return;
-      inputMonto.value += num;
+    const formatNumber = (value) => {
+      return parseFloat(value).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    };
+    
+    const agregarNumero = (num) => {
+      if (!montoIngresado.value) {
+        if (num === '00' && inputMonto.value === '') return;
+        inputMonto.value += num;
+      } else if (!empleadosSeleccionados.value) {
+        if (num === '00') return; // No permitir '00' para empleados
+        inputEmpleados.value += num;
+      } else if (metodoSeleccionado.value) {
+        if (num === '00' && montoPago.value === '') return;
+        montoPago.value += num;
+      }
     };
     
     const borrarNumero = () => {
-      inputMonto.value = inputMonto.value.slice(0, -1);
+      if (!montoIngresado.value) {
+        inputMonto.value = inputMonto.value.slice(0, -1);
+      } else if (!empleadosSeleccionados.value) {
+        inputEmpleados.value = inputEmpleados.value.slice(0, -1);
+      } else if (metodoSeleccionado.value) {
+        montoPago.value = montoPago.value.slice(0, -1);
+      }
+    };
+    
+    const confirmarAccion = () => {
+      if (!montoIngresado.value) {
+        confirmarMonto();
+      } else if (!empleadosSeleccionados.value) {
+        confirmarEmpleados();
+      } else if (metodoSeleccionado.value) {
+        confirmarMontoPago();
+      }
     };
     
     const confirmarMonto = () => {
@@ -199,14 +252,6 @@ export default defineComponent({
       }
     };
     
-    const agregarNumeroEmpleados = (num: string) => {
-      inputEmpleados.value += num;
-    };
-    
-    const borrarNumeroEmpleados = () => {
-      inputEmpleados.value = inputEmpleados.value.slice(0, -1);
-    };
-    
     const confirmarEmpleados = () => {
       const num = parseInt(inputEmpleados.value);
       if (!isNaN(num) && num > 0) {
@@ -217,10 +262,9 @@ export default defineComponent({
       }
     };
     
-    const seleccionarMetodoPago = (metodo: string) => {
+    const seleccionarMetodoPago = (metodo) => {
       metodoSeleccionado.value = metodo;
       montoPago.value = '';
-      montoIngresandoPago.value = false;
     };
     
     const confirmarMontoPago = () => {
@@ -262,7 +306,6 @@ export default defineComponent({
     };
     
     const imprimirRecibo = () => {
-      // Aquí iría la lógica para imprimir el recibo
       window.print();
     };
     
@@ -272,6 +315,12 @@ export default defineComponent({
       empleadosSeleccionados.value = false;
       inputMonto.value = '';
       inputEmpleados.value = '';
+    };
+    
+    const editarMonto = () => {
+      montoIngresado.value = false;
+      empleadosSeleccionados.value = false;
+      inputMonto.value = totalPropinas.value.toString();
     };
     
     const atras = () => {
@@ -307,11 +356,11 @@ export default defineComponent({
       restantePorPagar,
       efectivoEnCaja,
       pagoCompleto,
+      formatNumber,
       agregarNumero,
       borrarNumero,
+      confirmarAccion,
       confirmarMonto,
-      agregarNumeroEmpleados,
-      borrarNumeroEmpleados,
       confirmarEmpleados,
       seleccionarMetodoPago,
       confirmarMontoPago,
@@ -321,6 +370,7 @@ export default defineComponent({
       cerrarRecibo,
       imprimirRecibo,
       nuevoPago,
+      editarMonto,
       atras
     };
   }
@@ -330,203 +380,335 @@ export default defineComponent({
 <style scoped>
 .pagos-container {
   position: relative;
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
-  background-color: #f8f9fa;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-h1, h2, h3 {
   color: #333;
-  margin-bottom: 20px;
+  background-color: #fff;
+  min-height: 100vh;
 }
 
-.propinas-panel {
+.header {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 15px;
+}
+
+.btn-atras {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.arrow-left {
+  margin-right: 5px;
+  font-size: 12px;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0;
+  color: #333;
+}
+
+.efectivo-box {
+  background-color: #ffebee;
+  padding: 10px 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.efectivo-label {
+  display: block;
+  font-size: 12px;
+  color: #ff6b6b;
+  margin-bottom: 3px;
+}
+
+.efectivo-amount {
+  font-size: 20px;
+  font-weight: 500;
+  color: #ff6b6b;
+}
+
+.divider {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 10px 0 20px;
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 30px;
 }
 
-.propinas-input {
+.total-propinas {
+  background-color: #ffebee;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.amount-edit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.amount {
+  font-size: 28px;
+  font-weight: 500;
+  color: #ff6b6b;
+}
+
+.edit-button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+}
+
+.edit-icon {
+  font-size: 16px;
+}
+
+.empleados-section h2 {
+  font-size: 16px;
+  font-weight: 400;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.empleados-input {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.input-with-symbol {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px 15px;
+  background-color: #f5f5f5;
+}
+
+.hash-symbol {
+  margin-right: 10px;
+  font-size: 18px;
+  color: #666;
+}
+
+input {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  width: 100%;
+  outline: none;
+}
+
+.per-person {
+  color: #ff6b6b;
+  font-size: 16px;
+  padding-left: 5px;
+}
+
+.metodo-pago-section {
+  margin-top: 30px;
+}
+
+.with-icon {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 400;
+  margin-bottom: 15px;
+}
+
+.wallet-icon {
+  margin-right: 8px;
+}
+
+.payment-methods {
+  display: flex;
+  gap: 10px;
+}
+
+.payment-method-btn {
   flex: 1;
-  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.payment-summary {
-  flex: 2;
-  min-width: 400px;
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.payment-method-btn.active {
+  background-color: #ff6b6b;
+  color: white;
+  border-color: #ff6b6b;
 }
 
-.input-section {
-  background-color: white;
+.method-icon {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.numpad-area {
+  background-color: #f5f5f5;
+  border-radius: 12px;
   padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.numpad-display {
+  width: 100%;
+  margin-bottom: 20px;
 }
 
 .monto-input {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #007bff;
-  padding-bottom: 10px;
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
 }
 
 .currency-symbol {
   font-size: 24px;
   margin-right: 10px;
-  color: #007bff;
+  color: #666;
 }
 
-input {
-  border: none;
-  font-size: 24px;
-  width: 100%;
-  outline: none;
-}
-
-.numpad {
+.numpad-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+  width: 100%;
   margin-bottom: 20px;
 }
 
-.numpad button {
-  background-color: #f1f3f5;
+.numpad-btn {
+  background-color: white;
   border: none;
-  padding: 15px;
-  font-size: 18px;
-  border-radius: 5px;
+  height: 60px;
+  font-size: 22px;
+  border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
-.numpad button:hover {
-  background-color: #e9ecef;
+.numpad-btn:hover {
+  background-color: #e0e0e0;
 }
 
-.btn-confirmar, .btn-cancelar, .btn-recibo, .btn-nuevo, .btn-imprimir, .btn-cerrar, .btn-atras {
-  background-color: #007bff;
+.backspace {
+  font-size: 18px;
+}
+
+.confirm-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #ff6b6b;
   color: white;
   border: none;
-  padding: 12px 20px;
-  font-size: 16px;
-  border-radius: 5px;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: background-color 0.2s;
-  width: 100%;
-  margin-top: 10px;
 }
 
-.btn-cancelar {
-  background-color: #dc3545;
+.check-icon {
+  font-size: 24px;
 }
 
-.btn-atras {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  width: auto;
+.pagos-summary {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  grid-column: 1;
+}
+
+.pagos-summary h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.sin-pagos {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  font-style: italic;
+}
+
+.pago-list {
+  margin-bottom: 20px;
+}
+
+.pago-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.pago-metodo {
+  font-weight: 500;
+}
+
+.pago-monto {
+  color: #ff6b6b;
+  font-weight: 500;
+}
+
+.summary-totals {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
 }
 
 .summary-row {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid #e9ecef;
 }
 
-.payment-history {
-  margin: 20px 0;
-}
-
-.no-payments {
-  color: #6c757d;
-  font-style: italic;
-}
-
-.payment-item {
-  background-color: #f8f9fa;
-  padding: 10px;
-  margin-bottom: 5px;
-  border-radius: 5px;
-}
-
-.payment-methods {
-  margin-top: 30px;
-}
-
-.cash-available, .total-tips, .employees-count {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.method-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 20px 0;
-}
-
-.method-buttons button {
-  flex: 1;
-  min-width: 120px;
-  background-color: #f1f3f5;
-  border: none;
-  padding: 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.method-buttons button:hover {
-  background-color: #e9ecef;
-}
-
-.method-buttons button.active {
-  background-color: #007bff;
-  color: white;
-}
-
-.payment-options {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 15px 0;
-}
-
-.payment-options button {
-  background-color: #f1f3f5;
-  border: none;
-  padding: 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.payment-options button:hover {
-  background-color: #e9ecef;
-}
-
-.payment-complete {
-  text-align: center;
-  margin-top: 30px;
-  padding: 20px;
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
-  border-radius: 5px;
-}
-
-.recibo-modal {
+.confirm-payment-overlay,
+.payment-complete-overlay,
+.recibo-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -539,12 +721,54 @@ input {
   z-index: 1000;
 }
 
+.confirm-payment-modal,
+.payment-complete-modal,
 .recibo-content {
   background-color: white;
-  padding: 30px;
-  border-radius: 10px;
-  max-width: 600px;
+  padding: 25px;
+  border-radius: 12px;
+  max-width: 500px;
   width: 90%;
+  text-align: center;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-confirmar,
+.btn-cancelar,
+.btn-recibo,
+.btn-nuevo,
+.btn-imprimir,
+.btn-cerrar {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-confirmar,
+.btn-recibo,
+.btn-imprimir {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+.btn-cancelar,
+.btn-cerrar {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.btn-nuevo {
+  background-color: #4caf50;
+  color: white;
 }
 
 .recibo-content h2 {
@@ -552,6 +776,7 @@ input {
 }
 
 .recibo-content ul {
+  text-align: left;
   padding-left: 20px;
 }
 
@@ -574,6 +799,33 @@ input {
   }
   .btn-imprimir, .btn-cerrar {
     display: none;
+  }
+}
+
+/* Make it responsive */
+@media (max-width: 768px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .numpad-area {
+    grid-column: 1;
+    grid-row: auto;
+    margin-top: 20px;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .efectivo-box {
+    margin-top: 15px;
+    width: 100%;
+  }
+  
+  .payment-methods {
+    flex-direction: column;
   }
 }
 </style>
