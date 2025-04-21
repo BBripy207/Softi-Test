@@ -10,6 +10,8 @@
   "dependencies": {
     "axios": "^1.6.2",
     "core-js": "^3.33.3",
+    "sequelize": "^6.37.7",
+    "sqlite3": "^5.1.7",
     "vue": "^3.5.13",
     "vuex": "^4.1.0"
   },

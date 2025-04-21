@@ -1,33 +1,63 @@
-// server/src/models/Pago.ts
-import TransaccionModel from './Transaccion';
+import { Model, DataTypes } from 'sequelize';
+import sequelize from '../config/database';
+import Transaccion from './Transaccion';
 
-interface Pago {
-    id: number;
+interface PagoAttributes {
+    id?: number;
     monto: number;
     metodoPago: string;
     transaccionId: number;
     fecha: Date;
 }
 
-class PagoModel {
-    public static pagos: Pago[] = [];
-
-    public static async create(monto: number, metodoPago: string, transaccionId: number): Promise<Pago> {
-        const pago: Pago = {
-            id: this.pagos.length + 1, // ID único
-            monto,
-            metodoPago,
-            transaccionId,
-            fecha: new Date(),
-        };
-
-        this.pagos.push(pago);
-        return pago;
-    }
-
-    public static async findAllByTransaccionId(transaccionId: number): Promise<Pago[]> {
-        return this.pagos.filter((pago) => pago.transaccionId === transaccionId);
-    }
+class Pago extends Model<PagoAttributes> implements PagoAttributes {
+    public id!: number;
+    public monto!: number;
+    public metodoPago!: string;
+    public transaccionId!: number;
+    public fecha!: Date;
 }
 
-export default PagoModel;
+Pago.init(
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
+        monto: {
+            type: DataTypes.FLOAT,
+            allowNull: false,
+        },
+        metodoPago: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        transaccionId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: Transaccion,
+                key: 'id',
+            },
+        },
+        fecha: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
+        },
+    },
+    {
+        sequelize,
+        tableName: 'pagos',
+    }
+);
+
+// Establecer relación
+Pago.belongsTo(Transaccion, { foreignKey: 'transaccionId' });
+Transaccion.hasMany(Pago, { foreignKey: 'transaccionId' });
+
+Pago.belongsTo(Transaccion, { foreignKey: 'transaccionId' });
+Transaccion.hasMany(Pago, { foreignKey: 'transaccionId' });
+
+export default Pago;

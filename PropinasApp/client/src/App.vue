@@ -1,4 +1,3 @@
-<!-- client/src/App.vue -->
 <template>
   <div class="app-container">
     <PagarPropinas />
@@ -9,12 +8,11 @@
 import { defineComponent } from 'vue';
 import PagarPropinas from './views/PagarPropinas.vue';
 
-
 export default defineComponent({
   name: 'App',
   components: {
-    PagarPropinas,
-  },
+    PagarPropinas
+  }
 });
 </script>
 
@@ -26,4 +24,3 @@ export default defineComponent({
   font-family: Arial, sans-serif;
 }
 </style>
-
